@@ -1,17 +1,28 @@
+from playwright.sync_api import sync_playwright
 import requests
 import os
 
-URL = "https://www.sheinindia.in/s/footwear-207316?query=%3Anewn%3Arelevance%3Aundefined%3Aundefined%3Anull&curated=true&curatedid=footwear-207316&customerType=Existing&gridColumns=5&sort=prce-desc&segmentIds=&customertype=Existing"
+BOT_TOKEN = os.environ["BOT_TOKEN"]
+CHAT_ID = os.environ["CHAT_ID"]
 
-r = requests.get(
-    URL,
-    headers={
-        "User-Agent": "Mozilla/5.0"
-    },
-    timeout=30
+URL = "https://www.sheinindia.in/s/footwear-207316"
+
+with sync_playwright() as p:
+    browser = p.chromium.launch(headless=True)
+    page = browser.new_page()
+
+    page.goto(URL, wait_until="networkidle", timeout=60000)
+
+    text = page.locator("body").inner_text()
+
+    browser.close()
+
+msg = f"SHEIN TEST\n\n{text[:500]}"
+
+requests.get(
+    f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
+    params={
+        "chat_id": CHAT_ID,
+        "text": msg[:4000]
+    }
 )
-
-print("Status:", r.status_code)
-print("Length:", len(r.text))
-
-print(r.text[:1000])
